@@ -1,4 +1,4 @@
-# korona_kartta (this app is deprcitated do the the end of the pandemic and the deprecation of the database by THL. The purpose of this repository is to function as a portfolio peace.)
+# korona_kartta (this app is deprcetated do the the end of the pandemic and the deprecation of the database by THL. The purpose of this repository is to function as a portfolio peace.)
 
 - A web-app that presents the amount of new infection cases in Finland by major regions. 
 - Uses a nodejs server and an express app.
