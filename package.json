@@ -1,0 +1,33 @@
+{
+  "name": "koronakartta",
+  "version": "1.0.0",
+  "description": "Map of corona cases in Finland",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon ./index.js"
+  },
+  "keywords": [
+    "corona",
+    "map",
+    "finland"
+  ],
+  "author": "jaakko kuusela",
+  "license": "ISC",
+  "devDependencies": {
+    "browser-sync": "^2.26.12",
+    "nodemon": "^2.0.4"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "helmet": "^4.2.0",
+    "http": "0.0.1-security",
+    "https": "^1.0.0",
+    "jsonstat-toolkit": "^1.0.8",
+    "node-fetch": "^2.6.1",
+    "pug": "^3.0.0",
+    "winston": "^3.3.3"
+  },
+  "engines": {
+    "node": "12.x"
+  }
+}

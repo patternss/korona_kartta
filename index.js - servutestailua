@@ -1,0 +1,165 @@
+const express = require('express');
+const path = require("path");
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
+const fetch = require('node-fetch');
+const JSONstat = require('jsonstat-toolkit');
+const { createLogger, format, transports } = require('winston');
+const { combine, timestamp, printf } = format;
+
+//App variables
+const app = express();
+const port = process.env.PORT || "8000";
+
+const myFormat = printf(({level, message, timestamp}) => {
+  return `${timestamp} ${level}: ${message}`;
+});
+
+const logger = createLogger({
+  format: combine(
+    timestamp(),
+    myFormat
+  ),
+  transports: [
+    new transports.Console(),
+    new transports.File({ filename: 'combined.log' })
+  ]
+});
+
+//create http and https servers:
+
+const httpServer = http.createServer(app);
+
+
+const httpsServer = https.createServer({
+  key: fs.readFileSync('../ssl/keys/99b02_90195_28b384ee7fbe623a86e421a8a3e6e96e.key'),
+  cert: fs.readFileSync('../ssl/certs/koronastatus_fi_99b02_90195_1614003046_5c5193b00b4defcab66dcc4d03d7153a.crt')
+}, app);
+
+
+logger.info('logger luotu index_test.js');
+
+
+
+//App settings
+app.set("views", path.join(__dirname, 'views'));
+app.set('view engine', 'pug');
+app.use(express.static(path.join(__dirname, 'public')));
+
+//Global variables
+var url = 'https://sampo.thl.fi/pivot/prod/fi/epirapo/covid19case/fact_epirapo_covid19case.json?row=dateweek2020010120201231-443702L&column=hcdmunicipality2020-445222';
+var CHAs; //central hospital areas
+var dataJSON;
+var dataJSONSTAT;
+const timeID = "dateweek2020010120201231";
+const areaID = "hcdmunicipality2020";
+logger.info('muuttujien luonnin jalkeen');
+const UPDATEHOURS = 13 ;
+const INTERVAL = 13; //13 --> 14 day period
+//dates for 2 week interval:
+let lastDate = new Date();
+lastDate.setDate(lastDate.getDate() -2);
+let firstDate = new Date();
+firstDate.setDate(lastDate.getDate() - INTERVAL);
+
+
+//Helper functions:
+  //returns the first key found from an object by given value
+const getKeyByValue = (object, value) => {
+  return Object.keys(object).find(key => object[key] === value);
+}
+
+
+const getTimeRoot = (time) => {
+  const times = dataJSON.dataset.dimension.dateweek2020010120201231.category.label;
+  const root = getKeyByValue(times, time);
+  return root;
+}
+
+const getAreaRoot = (area) => {
+  const areas = dataJSON.dataset.dimension.hcdmunicipality2020.category.label;
+  const root = getKeyByValue(areas, area);
+  return root;
+}
+
+const dateToDatestring = date => date.toISOString().slice(0, date.toISOString().indexOf('T'));
+
+//return number of cases in certain area within two dates: (string, Date, Date)
+//return number of cases in certain area for one day: (string, Date)
+const getCasesArea =
+                          function (area, timeStart, timeEnd) {
+
+    if (arguments.length === 2 )
+    {
+      return parseInt(JSONstat(dataJSON).Dataset(0).
+       Data({[timeID]: getTimeRoot(dateToDatestring(timeStart)) ,
+           [areaID] : getAreaRoot(area)}).value)
+           //return statement here?
+    }
+
+    let caseCounter = 0;
+    let runningDay = new Date(timeStart.getTime());
+    let oneAfterLast = new Date(timeEnd.getTime()); //while end condition to include timeEnd
+    oneAfterLast.setDate(oneAfterLast.getDate() + 1);
+
+    while (!((runningDay.getDate() == oneAfterLast.getDate()) &&
+          (runningDay.getMonth() == oneAfterLast.getMonth()))){
+            caseCounter += parseInt(JSONstat(dataJSON).Dataset(0).
+             Data({[timeID]: getTimeRoot(dateToDatestring(runningDay)) ,
+                 [areaID] : getAreaRoot(area)  }).value);
+
+            runningDay.setDate(runningDay.getDate() + 1 );
+
+    }
+    return caseCounter;
+}
+
+// (Date, Date | returns Map (area/string, number of cases/int))
+const getCasesInFinland = (startDate, endDate ) => {
+
+  let cases = new Map();
+  logger.info('getCasesInFinland issa');
+  logger.info(`number of areas ${typeof(CHAs)}`);
+  for(let area of CHAs){
+    cases.set(area, getCasesArea(area, startDate, endDate));
+  }
+  return cases;
+}
+
+  fetch(url)
+    .then(res => {
+      logger.info('fetch response:', Object.entries(res));
+      return res.json();
+    })
+    .then(json => {
+      dataJSON = json;
+      logger.info(Object.entries(json));
+      dataJSONSTAT = JSONstat(dataJSON);
+      CHAs = Object.values
+      (dataJSON.dataset.dimension.hcdmunicipality2020.category.label);
+      logger.info('fetchissä CHAs tulostus:', {message:CHAs});
+
+    }).catch(err => {
+      logger.info(err);
+      logger.info(err.type);
+      logger.info(err.message);
+      logger.info('fetch process failed');
+    });
+
+app.get('/', (req,res) => {
+  res.send('hellooo wuurld');
+});
+
+
+httpServer.listen(port, () => {
+  logger.info(`http server running on port ${port}`);
+});
+ httpsServer.listen(8403, () => {
+     logger.info(`HTTPS Server running on port 8403`);
+ });
+
+//
+// app.listen(port, () => {
+//   logger.info(`listening to port ${port}`);
+// });

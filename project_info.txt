@@ -1,0 +1,41 @@
+seuraavaksi:
+
+2do
+
+- fiksaa kuukausi bugi - näyttää väärän kuukauden
+
+- Servuhotellin etsintä
+	- muuttujat: luotettavuus, hinta, ominaisuudet(näkyykö console livenä, yhteys, datansiirto, sp)
+
+- domainin hankinta
+
+- node.js production deployment artikkeli
+
+- deploy
+	- lokitulosteet
+
+- servulta datanhaku kerran päivässä. tarkistus onko data tullut X
+	- tarkista käytetäänkö lastDatena eilistä vai toissapäivää X
+- kartalle mobiili ja desktopversiot X
+	- tutki ja testaile css juttuja
+
+-Taulukon luonti?:
+
+Done:
+- live servu mobiilitestausta varten
+- ilmaantuvuusluvut kartalle
+- zoomin ja panningin poisto
+-kartan luonti leafletillä ja testaus X
+Server.leaflet <- luo karttaolio, aseta olioon SHPdata, lisää aikavälin ilmaantuvuusluvut maakunnille
+Browser <- pyydä Serveriltä karttaolio, renderöi karttaolio
+THL tietokanta <- hanki väestön koko sairaanhoitopiirin mukaan dimensiot(asukasluku, alue)
+
+
+-THLtietokannasta hakeminen ja tulostaminen X
+	- get cases in finland (timeStart, timeEnd) X // utc aika yms tarkistus
+		- getCases(area, timeStart, timeEnd) X
+			- dateTodatestring (date) X
+			- get rootArea(area) X
+			- get rootTime(time) X
+
+- style.css publiciin, luo viewi X
